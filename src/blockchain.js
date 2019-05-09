@@ -56,7 +56,7 @@ class Blockchain {
      * or reject if an error happen during the execution.
      * You will need to check for the height to assign the `previousBlockHash`,
      * assign the `timestamp` and the correct `height`...At the end you need to 
-     * create the `block hash` and push the block into the chain array. Don't for get 
+     * create the `block hash` and push the block into the chain array. Don't forget 
      * to update the `this.height`
      * Note: the symbol `_` in the method name indicates in the javascript convention 
      * that this method is a private method. 
@@ -64,7 +64,24 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-           
+            try {
+                block.height = ++self.height;
+                block.time = Date.now().toString().slice(0, -3);                                              // Timestamp for the Block creation
+                if (block.height > 0) {
+                    block.previousBlockHash = self.chain[self.chain.length -1].hash;
+                }
+                block.hash = SHA256(
+                    block.time + 
+                    block.height + 
+                    block.body + 
+                    block.previousBlockHash
+                ).toString();
+
+                self.chain.push(block);
+                resolve(block);
+            } catch (exc) {
+                reject(exc)
+            }
         });
     }
 
@@ -78,7 +95,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);        
         });
     }
 
@@ -102,7 +119,22 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            
+           try {
+            let time_in_message = parseInt(message.split(':')[1])
+            let current_time = parseInt(new Date().getTime().toString().slice(0,-3));
+            if (current_time - time_in_message < 5) {
+                if (bitcoinMessage.verify(message,address,signature) == true) {
+                    let block = new BlockClass.Block({owner: address,star: star});
+                    self._addBlock(block).then(block => resolve(block));
+                } else {
+                    reject(new Error("Signature verification failed"));
+                }
+            } else {
+                reject(new Error("Time elapsed is more than 5 minutes"));
+            }
+           } catch (error) {
+               reject(error);
+           }
         });
     }
 
@@ -115,7 +147,12 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           
+           let block = self.chain.filter(b => b.hash == hash)[0];
+           if (block) {
+               resolve(block);
+           } else {
+               reject(null);
+           } 
         });
     }
 
@@ -145,8 +182,19 @@ class Blockchain {
     getStarsByWalletAddress (address) {
         let self = this;
         let stars = [];
-        return new Promise((resolve, reject) => {
-            
+        return new Promise(async (resolve, reject) => {
+            let stars = [];
+            try {
+                for (let i = 1; i < self.chain.length; i++) {
+                    let data = await self.chain[i].getBData();
+                    if (data.owner == address) {
+                        stars.push(data);
+                    }
+                }
+                resolve(stars);
+            } catch (exc) {
+                reject(new Error(exc));
+            }
         });
     }
 
@@ -160,7 +208,20 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            
+            try {
+                let previousBlockHash = null;
+                for (let i=0;i < self.chain.length-1;i++) {
+                    let block = self.chain[i];
+                    let valid = await block.validate();
+                    if (!valid || block.previousBlockHash !== previousBlockHash) {
+                        errorLog.push(`block at height ${block.height} is invalid`);
+                    }
+                    previousBlockHash = block.previousBlockHash;
+                }
+                resolve(errorLog);
+            } catch(exc) {
+                reject(new Error(exc));
+            }
         });
     }
 
