@@ -71,7 +71,14 @@ class Block {
         return new Promise((resolve,reject) => {
             if (self.height > 0 ) {
                 resolve(JSON.parse(Buffer.from(this.body,'hex').toString()));
+
+                // hex2ascii doesn't convert the degree symbol correctly.
+                // For example: 68° gets converted to 68Â° causing my unit
+                // tests to fail. 
+
+                // resolve(JSON.parse(hex2ascii(self.body)));
             } else {
+                console.log("getBData: Genesis Block");
                 reject(new Error("Genesis block"));
             }
         });

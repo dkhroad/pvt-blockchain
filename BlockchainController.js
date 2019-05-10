@@ -67,9 +67,11 @@ class BlockchainController {
                     if(block){
                         return res.status(200).json(block);
                     } else {
+                        console.log("here 1");
                         return res.status(500).send("An error happened!");
                     }
                 } catch (error) {
+                    console.log("here 2 " + error);
                     return res.status(500).send(error);
                 }
             } else {

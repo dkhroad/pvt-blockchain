@@ -54,14 +54,14 @@ describe("#submitStar",() => {
       it("Doesn\'t add a new block with star info to the chain ", () => {
         return blockChain.requestMessageOwnershipVerification("1234")
           .then((message) => {
-            clock.tick(5001);
+            clock.tick(60*5001);
             let signature = bitcoinMessage.sign(message, privateKey, keyPair.compressed);
             expect(blockChain.submitStar(
               address,
               message,
               signature,
               "some shady star info")
-            ).to.rejectedWith(Error, "Time elapsed is more than 5 minutes");
+            ).to.eventually.rejectedWith(Error, "Time elapsed is more than 5 minutes");
           });
       });
     });

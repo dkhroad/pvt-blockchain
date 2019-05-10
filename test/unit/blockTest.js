@@ -31,7 +31,7 @@ describe('getBData',() => {
       block.height = 1;
     });
     it('decodes and returns the block body',() => {
-      return expect(block.getBData()).to.eventually.deep.equal({a: 1,b: 2});
+      return expect(block.getBData()).to.eventually.deep.eql({"a":1,"b":2});
     });
   });
 
