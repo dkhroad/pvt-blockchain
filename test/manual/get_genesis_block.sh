@@ -1,4 +1,4 @@
 #!/bin/sh
 
 set -x
-curl http://localhost:8000/block/0
+curl -s http://localhost:8000/block/0 | jq
