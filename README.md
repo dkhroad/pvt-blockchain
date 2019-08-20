@@ -2,6 +2,7 @@
 
 This application demonstrates a few fundamentals concepts of a Blockchain platform.
 Concepts like:
+
     - Block
     - Blockchain
     - Wallet
